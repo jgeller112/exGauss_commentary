@@ -1,0 +1,76 @@
+#need this to set path to nix for some reason
+# Sys.setenv(PATH = paste("/nix/var/nix/profiles/default/bin", Sys.getenv("PATH"), sep=":"))
+
+required_packages = c(
+  "brms",
+  "easystats",
+  "ggplot2",
+  "ggdist",
+  "tinytable", 
+  "knitr",
+  "rmarkdown", 
+  "marginaleffects", 
+  "reformulas", 
+  "collapse", 
+  "ragg"
+)
+
+library(rix)
+
+rix(
+  date = "2026-06-22",
+  r_pkgs = required_packages,
+  system_pkgs = c(
+    "quarto",
+    "git",
+    "pandoc",
+    "typst",
+    "stanc",
+    "tbb",
+    "gettext",
+    "libintl"
+  ),
+  git_pkgs = list(
+    list(
+      package_name = "cmdstanr",
+      repo_url = "https://github.com/stan-dev/cmdstanr",
+      commit = "541f36c74c236a322eaa0908e2e86425790ca2cf"
+    ),
+    list(
+      package_name = "brms.exgaussian",
+      repo_url = "https://github.com/mattansb/brms.exgaussian",
+      commit = "53b0745e10147b902acb4e40d72e0dd64033c311"
+    )
+  ),
+  tex_pkgs = c(
+    "amsmath",
+    "ninecolors",
+    "apa7",
+    "scalerel",
+    "threeparttable",
+    "threeparttablex",
+    "endfloat",
+    "environ",
+    "multirow",
+    "tcolorbox",
+    "pdfcol",
+    "tikzfill",
+    "fontawesome5",
+    "framed",
+    "newtx",
+    "fontaxes",
+    "xstring",
+    "wrapfig",
+    "tabularray",
+    "siunitx",
+    "fvextra",
+    "geometry",
+    "setspace",
+    "fancyvrb",
+    "anyfontsize"
+  ),
+  shell_hook = "Rscript install_cmdstan.R",
+  ide = "positron",
+  project_path = ".",
+  overwrite = TRUE
+)
