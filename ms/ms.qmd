@@ -1,6 +1,6 @@
 ---
 title: "This Is Not the ex-Gaussian Model You Are Looking For: On the Default Parameterization of Bayesian ex-Gaussian Models in brms"
-shortitle: "Ex-Gaussian Parameterization in brms"
+shorttitle: "Ex-Gaussian Parameterization in brms"
 author:
   - name: Jason Geller
     email: drjasongeller@gmail.com
@@ -15,7 +15,7 @@ affiliations:
     name: Boston College
     department: Department of Psychology and Neuroscience
 abstract: |
- The ex-Gaussian distribution is a popular model for analyzing reaction-time (RT) data because it separates the central portion of the distribution — captured by the Gaussian parameters $\mu$ and $\sigma$ — from its positively skewed tail, captured by the exponential parameter $\tau$. With Bayesian methods increasingly accessible and low in technical overhead, ex-Gaussian models can now be fit with relative ease. In R, the `brms` package makes this especially straightforward. However, the default parameterization adopted by many researchers contains a subtle pitfall: the parameter labeled `mu` represents the mean of the *full* ex-Gaussian distribution, $E(RT) = \mu + \tau$, rather than the location of the Gaussian component alone. Consequently, effects estimated on the default `mu` describe changes in the overall mean and can obscure genuine shifts in the Gaussian component itself. Using simulated data in which the Gaussian location and the exponential tail shift in opposite directions — holding the overall mean constant — I show that the default model returns a null effect on `mu`, whereas the classical parameterization recovers the true 50-ms shift. I provide annotated R code using `{brms}` and demonstrate how to fit the correct parameterization. Researchers should pay careful attention to what a model's parameters actually estimate.
+The ex-Gaussian distribution is a popular model for analyzing reaction-time (RT) data because it separates the central portion of the distribution, captured by the Gaussian parameters $\mu$ and $\sigma$, from the positively skewed tail, captured by the exponential parameter $\tau$. As Bayesian methods have become increasingly accessible, complex ex-Gaussian models can now be fit with relative ease. In R, the brms package makes this especially straightforward. However, the default parameterization used by many researchers contains a subtle but important pitfall: the parameter labeled mu represents the mean of the full ex-Gaussian distribution, $E(RT) = \mu + \tau$, rather than the location of the Gaussian component alone. Consequently, effects estimated on the default mu describe changes in the overall mean and can obscure genuine shifts in the Gaussian component itself.Using simulated data in which the Gaussian location and the exponential tail shift in opposite directions while holding the overall mean constant, I show that the default model returns a null effect on mu, whereas the classical parameterization recovers the true 50-ms shift in the Gaussian component. I then demonstrate how to fit the classical parameterization directly in {brms}. My hope is that this commentary will help researchers and reviewers better understand the models they are fitting, ensure that the parameters match their theoretical questions, and more accurately evaluate ex-Gaussian models reported in the literature.
 keywords:
   - ex-Gaussian
   - reaction time
@@ -23,8 +23,17 @@ keywords:
   - brms
   - parameterization
 citeproc: true
+floatsintext: true
+author-note:
+  disclosures:
+    study-registration: "The analyses herein were not preregistered."
+    data-sharing: Data, code, and materials for this manuscript can be found.
+    conflict-of-interest: The authors have no conflicts of interest to disclose.
+    financial-support: ~
+    authorship-agreements: ~
+numbered-lines: true
 bibliography: references.bib
-csl: https://www.zotero.org/styles/apa
+csl: apa.csl
 date: "`r Sys.Date()`"
 knitr:
   opts_chunk:
@@ -33,6 +42,31 @@ knitr:
     message: false
     warning: false
     freeze: auto
+    dev: "ragg_png"
+    fig-align: center
+    tbl-align: center
+    code-line-numbers: true
+    keep-with-next: true
+    code-overflow: wrap
+    fig-width: 6
+    fig-asp: 0.8
+    fig-pos: "h"
+    tbl-pos: "h"
+    fig-dpi: 300
+format:
+  apaquarto-docx: default
+  apaquarto-typst:
+    documentmode: doc
+    csl: apa.csl
+  apaquarto-html:
+    toc: true
+    toc-depth: 2
+    toc-title: Manuscript Outline
+    toc-location: right
+    echo: true
+    code-tools: true
+    code-fold: true
+    code-summary: "Show R code"
 ---
 
 Over the past two decades, psychology has seen a substantial increase in the application of Bayesian data analysis methods as a supplement to widely used frequentist methods [@pfadt2025methodological]. This shift has been driven by the increasing availability of computational tools that have made fitting Bayesian models both practical and efficient. Programming languages like R [@R], Python [@python], and Julia [@julia] provide libraries and packages that allow researchers to fit Bayesian models with little technical overhead. In addition, growing dissatisfaction with null-hypothesis significance testing (NHST) and its associated pitfalls (e.g., p-value misinterpretation and dichotomous thinking), together with the replication crisis and credibility revolution [@vazire2018], has pushed many researchers toward statistical alternatives.
@@ -60,6 +94,7 @@ In @geller2025, we examined how perceptual disfluency—manipulated by varying t
 #| warning: false
 library(brms)
 library(brms.exgaussian)
+library(ragg)
 library(tinytable)
 library(easystats)
 library(ggplot2)
