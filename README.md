@@ -1,9 +1,9 @@
 # exGauss_commentary
 
-A short methodological commentary on the use of **Bayesian ex-Gaussian models** for
+A short methodological commentary on the use of Bayesian ex-Gaussian models for
 reaction-time (RT) data in cognitive science.
 
-The paper shows that the parameter labeled `mu` in the **default** `brms` ex-Gaussian
+The paper shows that the parameter labeled `mu` in the default `brms` ex-Gaussian
 family is *not* the Gaussian location parameter but the mean of the whole
 distribution, `E(RT) = μ + τ`. Using a simulated example, it demonstrates how this
 can mask a genuine effect on the Gaussian component, and shows how to fit a
