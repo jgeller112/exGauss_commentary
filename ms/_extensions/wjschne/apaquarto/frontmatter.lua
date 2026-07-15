@@ -529,29 +529,36 @@ return {
           if FORMAT == "typst" then
             abstractlinecounter = 2
           end
-          meta.apaabstract:walk {
-            LineBlock = function(lb)
-              lb:walk {
-                traverse = "topdown",
-                Inlines = function(el)
-                  local lbpara = pandoc.Para(el)
-
-                  if abstractlinecounter == 1 then
-                    abstractfirstparagraphdiv.content:extend({ lbpara })
-                    abstractfirstparagraphdiv.classes:insert("AbstractFirstParagraph")
-                  else
-                    abstractdiv.content:extend({ lbpara })
-                    if abstractlinecounter == 2 then
-                      abstractdiv.classes:insert("Abstract")
-                    end
-                  end
-
-                  abstractlinecounter = abstractlinecounter + 1
-                  return el, false
-                end
-              }
+          local function placeabstractpara(lbpara)
+            if abstractlinecounter == 1 then
+              abstractfirstparagraphdiv.content:extend({ lbpara })
+              abstractfirstparagraphdiv.classes:insert("AbstractFirstParagraph")
+            else
+              abstractdiv.content:extend({ lbpara })
+              if abstractlinecounter == 2 then
+                abstractdiv.classes:insert("Abstract")
+              end
             end
-          }
+            abstractlinecounter = abstractlinecounter + 1
+          end
+
+          -- Walk every top-level block in document order. A "| "-prefixed
+          -- LineBlock (the structured-abstract convention) contributes one
+          -- abstract line per internal line; an ordinary Markdown paragraph
+          -- (Para/Plain) contributes one abstract line for the whole
+          -- paragraph. Handling both in the same pass means a plain,
+          -- unstructured abstract is never silently dropped, and a document
+          -- that mixes the two styles still renders every block.
+          for _, blk in ipairs(meta.apaabstract) do
+            if blk.t == "LineBlock" then
+              for _, line in ipairs(blk.content) do
+                placeabstractpara(pandoc.Para(line))
+              end
+            elseif blk.t == "Para" or blk.t == "Plain" then
+              placeabstractpara(pandoc.Para(blk.content))
+            end
+          end
+
           if abstractlinecounter > 1 then
             body:extend({ abstractfirstparagraphdiv })
           end
