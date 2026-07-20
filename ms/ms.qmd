@@ -56,6 +56,7 @@ keywords:
   - parameterization
 citeproc: true
 floatsintext: true
+wordcount: true
 author-note:
   disclosures:
     study-registration: "The analyses herein were not preregistered."
@@ -115,7 +116,7 @@ In this commentary, we demonstrate what the default parameterization of the ex-G
 
 ## Simulation Example
 
-To demonstrate the issue with fitting the default ex-Gaussian model in {brms}, I simulate data using a comparison adapted from one of my own studies [@geller2025] in R [version 4.6.0; @R]. In @geller2025, we examined how perceptual disfluency—manipulated by varying the level of blur applied to letter strings influenced reaction times in a lexical decision task (i.e., is this letter string a word?), and whether these effects were related to how well someone remembers the words in a reconition memory task. In that study, low blur words affected early stages of encoding, reflected in the Gaussian location parameter $\mu$, but not the later, tail component captured by $\tau$. For the present illustration, however, I construct a sharper scenario in which $\mu$ and $\tau$ differ in opposite directions so that the two conditions share the same expected reaction time. Using the `rexgaussian2()` function from the {brms.exgaussian} package (please install from Github), I simulate ex-Gaussian data for clearly presented and low-blur words in which $\mu$ is set to 500 ms and 550 ms, $\tau$ to 100 ms and 50 ms, and $\sigma$ to 60 ms in both conditions (see @tbl-exgauss).
+To demonstrate the issue with fitting the default ex-Gaussian model in {brms}, I simulate data using a comparison adapted from one of my own studies [@geller2025] in R [version 4.6.0; @R]. In @geller2025, we examined how perceptual disfluency—manipulated by varying the level of blur applied to letter strings influenced reaction times in a lexical decision task (i.e., is this letter string a word?), and whether these effects were related to how well someone remembers the words in a reconition memory task. In that study, low blur words affected early stages of encoding, reflected in the Gaussian location parameter $\mu$, but not the later, tail component captured by $\tau$. For the present illustration, however, I construct a sharper scenario in which $\mu$ and $\tau$ differ in opposite directions so that the two conditions share the same expected reaction time. Using the `rexgaussian2()` function from the {brms.exgaussian} package (installed from GitHub as shown in @lst-install-brms-exgaussian), I simulate ex-Gaussian data for clearly presented and low-blur words in which $\mu$ is set to 500 ms and 550 ms, $\tau$ to 100 ms and 50 ms, and $\sigma$ to 60 ms in both conditions (see @tbl-exgauss).
 
 
 ```{r}
@@ -169,7 +170,9 @@ clean_estimate <- function(x, digits = 1) {
 ```
 
 ```{r}
-#| label: load-brms.exgaussian
+#| label: load-brms-exgaussian
+#| lst-label: lst-install-brms-exgaussian
+#| lst-cap: "Installing and loading the {brms.exgaussian} package from GitHub."
 
 # install from Github
 #remotes::install_github("mattansb/brms.exgaussian")
@@ -207,10 +210,12 @@ tt(param_table)
 
 ### Simulate the Data
 
-We first draw 100 reaction times per condition (200 in total) from the ex-Gaussian distributions defined by these parameters.
+We first draw 100 reaction times per condition (200 in total) from the ex-Gaussian distributions defined by these parameters (@lst-simulate-data).
 
 ```{r}
 #| label: simulate-data
+#| lst-label: lst-simulate-data
+#| lst-cap: "Simulating ex-Gaussian reaction times for the Clear and Low-Blur conditions."
 # Fix the random seed so the simulated data are identical on every render.
 set.seed(1234)
 
@@ -376,10 +381,11 @@ Both the expected response and the exponential component are allowed to vary acr
 
 ### Prior Specification
 
-The priors were selected to reflect the known scale of the simulated data while remaining sufficiently broad to allow the model to recover deviations from the generating values.
+The priors were selected to reflect the known scale of the simulated data while remaining sufficiently broad to allow the model to recover deviations from the generating values. @tbl-priors shows these priors alongside those used for the classical parameterization introduced later, so the two specifications can be compared directly.
 
 ```{r}
 #| label: priors-default
+#| echo: false
 priors_default <- c(
   # mu intercept: centered at 600 ms, the expected RT (E(RT)) of the reference
   # condition in this default parameterization.
@@ -407,73 +413,72 @@ priors_default <- c(
 )
 ```
 
-The intercept prior for the primary `mu` submodel is
+```{r}
+#| label: tbl-priors
+#| tbl-cap: "Prior specification for the default and classical ex-Gaussian models."
+#| echo: false
+#| results: asis
+priors_table <- data.frame(
+  Parameter = c(
+    "Intercept (mu)",
+    "Blur (mu)",
+    "Intercept (beta / tau, log scale)",
+    "Blur (beta / tau, log scale)",
+    "Intercept (sigma, log scale)"
+  ),
+  Default = c(
+    "Normal(600, 100)",
+    "Normal(0, 50)",
+    "Normal(log(100), 0.5)",
+    "Normal(0, 0.5)",
+    "brms default"
+  ),
+  Classical = c(
+    "Normal(500, 100)",
+    "Normal(0, 50)",
+    "Normal(log(100), 0.5)",
+    "Normal(0, 0.5)",
+    "Normal(log(60), 0.5)"
+  ),
+  Notes = c(
+    "Same form; centered on each parameterization's reference-condition value (E(RT) = 600 ms vs. Gaussian location = 500 ms)",
+    "Identical across parameterizations; no assumed direction for the effect of Blur",
+    "Identical across parameterizations; centered at log(100 ms), the simulated exponential mean of the reference condition",
+    "Identical across parameterizations; no assumed direction for the effect of Blur",
+    "Only the classical model estimates sigma explicitly; centered at log(60 ms), the simulated Gaussian standard deviation"
+  )
+)
+colnames(priors_table) <- c(
+  "Parameter",
+  "Default Prior",
+  "Classical Prior",
+  "Notes"
+)
 
-$$\mu_{\text{Intercept}}
-\sim
-\mathcal{N}(600,100).$$
+tt(priors_table)
+```
 
-We center this prior at 600 ms because, in the default parameterization, `mu` represents the expected RT. The simulated expected RT for the reference condition is
-
-$$500 + 100 = 600 \text{ ms}.$$
-
-The standard deviation of 100 ms makes the prior informative about the plausible scale of RTs without tightly constraining the intercept to equal exactly 600 ms.
-
-The prior on the `Blur` coefficient is
-
-$$b_{\text{Blur}}
-\sim
-\mathcal{N}(0,50).$$
-
-This prior is centered at zero because, before observing the data, positive and negative condition effects are both plausible. A standard deviation of 50 ms allows substantial differences between conditions while placing less prior mass on implausibly large effects.
-
-The `beta` parameter is positive and uses a log link. Its intercept is therefore modeled on the log scale:
-
-$$\log(\beta_{\text{Clear}})
-\sim
-\mathcal{N}\left(\log(100),0.5\right).$$
-
-The prior is centered at $\log(100)$ because the simulated value of the exponential mean for the reference condition is 100 ms. After applying the inverse-link transformation, the prior is centered approximately around
-
-$$\beta_{\text{Clear}} = 100 \text{ ms}.$$
-
-The standard deviation of 0.5 is on the log scale. It therefore represents multiplicative rather than additive uncertainty.
-
-The prior on the effect of `Blur` on `beta` is
-
-$$b_{\beta,\text{Blur}}
-\sim
-\mathcal{N}(0,0.5).$$
-
-Because this coefficient is also on the log scale, a value of zero represents no difference between conditions:
-
-$$\exp(0)=1.$$
-
-The simulated change from 100 ms to 50 ms corresponds to the log ratio
-
-$$\log\left(\frac{50}{100}\right) = \log(0.5) \approx -0.693.$$
-
-The prior $\mathcal{N}(0,0.5)$ places reasonable prior mass near this value while still favoring smaller differences.
-
-The model can then be fit as follows:
+The model can then be fit as follows (@lst-fit-default):
 
 ```{r}
-#| label: fit--default
+#| label: fit-default
+#| lst-label: lst-fit-default
+#| lst-cap: "Fitting the default ex-Gaussian model in brms."
 fit_brms <- brm(
   bf(
-    rt ~ Blur,      # mu submodel: here mu is E(RT), not the Gaussian location
-    sigma ~ 1,      # constant Gaussian SD
-    beta ~ Blur     # exponential mean (the classical tau), allowed to vary
+    rt ~ Blur, # mu submodel: here mu is E(RT), not the Gaussian location
+    sigma ~ 1, # constant Gaussian SD
+    beta ~ Blur # exponential mean (the classical tau), allowed to vary
   ),
   data = d,
   prior = priors_default,
-  family = exgaussian(),   # 's built-in ex-Gaussian family
+  family = exgaussian(), # 's built-in ex-Gaussian family
   chains = 2,
   iter = 2000,
   warmup = 500,
   backend = "cmdstanr",
   cores = 4,
-  seed = 1234              # reproducible draws
+  seed = 1234 # reproducible draws
 )
 ```
 
@@ -491,10 +496,12 @@ Thus, the 50-ms increase in $\mu$ for the Low-Blur condition is offset by a 50-m
 
 ### Estimating the Expected Response ($\mu$)
 
-Condition-specific estimates of the expected response can be obtained with `estimate_means()` and setting `predict` argument to "mu":
+Condition-specific estimates of the expected response can be obtained with `estimate_means()` and setting `predict` argument to "mu" (@lst-estimate-mu-default):
 
 ```{r}
 #| label: estimate-mu-default
+#| lst-label: lst-estimate-mu-default
+#| lst-cap: "Estimating the condition-specific expected response (mu) from the default model."
 # Default model: per-condition mu, which equals E(RT) in this parameterization.
 overall_means <- estimate_means(
   fit_brms,
@@ -514,10 +521,12 @@ tt(clean_estimate(overall_means))
 
 Because the primary `mu` parameter in the default ex-Gaussian model represents $E(RT)$, these estimates should be close to 600 ms in both conditions.
 
-The corresponding contrast can be obtained using `estimate_contrasts()`:
+The corresponding contrast can be obtained using `estimate_contrasts()` (@lst-contrast-mu-default):
 
 ```{r}
 #| label: contrast-mu-default
+#| lst-label: lst-contrast-mu-default
+#| lst-cap: "Estimating the Blur contrast in the expected response (default model)."
 # Default model: Blur contrast in E(RT) (≈ 0 by design).
 overall_difference <- estimate_contrasts(
   fit_brms,
@@ -546,10 +555,12 @@ In the default {`brms}` parameterization, `beta` represents the mean of the expo
 
 $$\beta = \tau.$$
 
-Condition-specific estimates can be obtained by requesting predictions for `beta`:
+Condition-specific estimates can be obtained by requesting predictions for `beta` (@lst-estimate-beta-default):
 
 ```{r}
 #| label: estimate-beta-default
+#| lst-label: lst-estimate-beta-default
+#| lst-cap: "Estimating the condition-specific exponential component (beta) from the default model."
 # Default model: per-condition beta (the exponential mean = classical tau).
 tau_estimates_default <- estimate_means(
   fit_brms,
@@ -571,10 +582,12 @@ Although the resulting object is called `tau_estimates_default` for interpretive
 
 These estimates should be approximately 100 ms for Clear and 50 ms for Low-Blur.
 
-The corresponding contrast can be obtained using:
+The corresponding contrast can be obtained using (@lst-contrast-beta-default):
 
 ```{r}
 #| label: contrast-beta-default
+#| lst-label: lst-contrast-beta-default
+#| lst-cap: "Estimating the Blur contrast in the exponential component (beta) from the default model."
 # Default model: Blur contrast in beta (the exponential component).
 tau_difference_default <- estimate_contrasts(
   fit_brms,
@@ -598,21 +611,24 @@ As we can see in @tbl-default-beta-contrast, the differnce between the two condi
 
 As we have shown above, the default paramterization gives you the exected RT of the entire distribution. We can instead fit the model using the `{brms.exgaussian}` package, which implements the classical ex-Gaussian parameterization. In this model, $\mu$ represents the location of the Gaussian component and $\tau$ represents the mean of the exponential component.
 
-We first define the custom family and Stan functions from the {brms.exgaussian} package:
+We first define the custom family and Stan functions from the {brms.exgaussian} package (@lst-exgaussian-family-setup):
 
 ```{r}
 #| label: exgaussian-family-setup
+#| lst-label: lst-exgaussian-family-setup
+#| lst-cap: "Defining the custom classical ex-Gaussian family and Stan code."
 # Custom family that reparameterizes brms so mu is the Gaussian location.
-exg_stanvars <- exgaussian2_stancode()  # Stan code injected into the model
-exg_family <- exgaussian2()             # the custom family definition
+exg_stanvars <- exgaussian2_stancode() # Stan code injected into the model
+exg_family <- exgaussian2() # the custom family definition
 ```
 
 ### Prior Specification
 
-The priors for the classical model are specified as follows:
+The priors for the classical model follow the same reasoning as those for the default model, shown together in @tbl-priors:
 
 ```{r}
 #| label: priors-classical
+#| echo: false
 priors_classical <- c(
   # mu intercept: centered at 500 ms, now the Gaussian location of the
   # reference condition (not E(RT)).
@@ -646,30 +662,22 @@ priors_classical <- c(
 )
 ```
 
-These priors follow the same reasoning as those for the default model (described above), with two changes. First, the intercept is now centered at 500 ms rather than 600 ms, because in the classical parameterization `mu` denotes the Gaussian-location parameter (500 ms for the Clear reference condition) rather than the expected RT:
-
-$$\mu_{\text{Intercept}} \sim \mathcal{N}(500,100).$$
-
-Second, because this model estimates `sigma` explicitly, it receives its own weakly informative prior on the log scale, centered at the simulated Gaussian standard deviation of 60 ms:
-
-$$\log(\sigma) \sim \mathcal{N}\left(\log(60),0.5\right).$$
-
-The coefficient for `Blur` on `mu` and the exponential-component priors are unchanged from the default model; the latter now simply attach to `tau` rather than `beta`, reflecting the difference in labels rather than any difference in the underlying quantity.
-
-The model is then fit using:
+The model is then fit using (@lst-fit-classical):
 
 ```{r}
 #| label: fit-brms-classical
+#| lst-label: lst-fit-classical
+#| lst-cap: "Fitting the classical ex-Gaussian model using {brms.exgaussian}."
 fit_brms_new <- brm(
   bf(
-    rt ~ Blur,      # mu submodel: here mu IS the Gaussian location
-    tau ~ Blur,     # exponential mean (the tail), allowed to vary
-    sigma ~ 1       # constant Gaussian SD
+    rt ~ Blur, # mu submodel: here mu IS the Gaussian location
+    tau ~ Blur, # exponential mean (the tail), allowed to vary
+    sigma ~ 1 # constant Gaussian SD
   ),
   data = d,
   prior = priors_classical,
-  family = exg_family,        # custom classical ex-Gaussian family
-  stanvars = exg_stanvars,    # supplies its Stan implementation
+  family = exg_family, # custom classical ex-Gaussian family
+  stanvars = exg_stanvars, # supplies its Stan implementation
   chains = 2,
   iter = 2000,
   warmup = 500,
@@ -681,10 +689,12 @@ fit_brms_new <- brm(
 
 ### Estimating the Gaussian-Location Parameter
 
-For the classical model, estimates from the primary regression formula correspond to the Gaussian-location parameter $\mu$:
+For the classical model, estimates from the primary regression formula correspond to the Gaussian-location parameter $\mu$ (@lst-estimate-mu-classical):
 
 ```{r}
 #| label: estimate-mu-classical
+#| lst-label: lst-estimate-mu-classical
+#| lst-cap: "Estimating the Gaussian-location parameter (mu) from the classical model."
 # Classical model: per-condition mu, now the Gaussian-location parameter.
 mu_estimates <- estimate_means(
   fit_brms_new,
@@ -704,10 +714,12 @@ tt(clean_estimate(mu_estimates))
 
 The estimates are approximately 500 ms for Clear and 550 ms for Low-Blur.
 
-The contrast between the two can be obtained using:
+The contrast between the two can be obtained using (@lst-contrast-mu-classical):
 
 ```{r}
 #| label: contrast-mu-classical
+#| lst-label: lst-contrast-mu-classical
+#| lst-cap: "Estimating the Blur contrast in the Gaussian-location parameter (classical model)."
 # Classical model: Blur contrast in the Gaussian-location parameter mu.
 mu_difference <- estimate_contrasts(
   fit_brms_new,
@@ -729,10 +741,12 @@ The posterior mean will not necessarily equal exactly 50 ms because of sampling 
 
 ### Estimating the Exponential Component
 
-Condition-specific estimates of $\tau$ can be obtained by requesting predictions for the `tau` distributional parameter:
+Condition-specific estimates of $\tau$ can be obtained by requesting predictions for the `tau` distributional parameter (@lst-estimate-tau-classical):
 
 ```{r}
 #| label: estimate-tau-classical
+#| lst-label: lst-estimate-tau-classical
+#| lst-cap: "Estimating the exponential component (tau) from the classical model."
 # Classical model: per-condition tau (the exponential component).
 tau_estimates <- estimate_means(
   fit_brms_new,
@@ -752,10 +766,12 @@ tt(clean_estimate(tau_estimates))
 
 The estimates should be close to 100 ms for Clear and 50 ms for Low-Blur.
 
-The corresponding contrast can be obtained using:
+The corresponding contrast can be obtained using (@lst-contrast-tau-classical):
 
 ```{r}
 #| label: contrast-tau-classical
+#| lst-label: lst-contrast-tau-classical
+#| lst-cap: "Estimating the Blur contrast in the exponential component (tau) from the classical model."
 # Classical model: Blur contrast in tau (the exponential component).
 tau_difference <- estimate_contrasts(
   fit_brms_new,
