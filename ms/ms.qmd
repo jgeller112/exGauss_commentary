@@ -138,13 +138,21 @@ To demonstrate the issue with fitting the default ex-Gaussian model in {brms}, w
 #| warning: false
 library(tidyverse)
 library(fs)
-#| 
 library(brms)
 library(ragg)
 library(tinytable)
 library(easystats)
 library(ggplot2)
 library(ggdist)
+library(qs2)
+
+# Check if split .qs2 files need to be combined (e.g. after a fresh git clone)
+split_qs2_script <- if (file.exists("split_qs2.R")) "split_qs2.R" else if (file.exists("../split_qs2.R")) "../split_qs2.R" else NULL
+if (!is.null(split_qs2_script)) {
+  source(split_qs2_script)
+  root_dir <- if (dir.exists("Angele_et_al_2022")) "." else ".."
+  check_and_combine_qs2(root_dir)
+}
 
 # Shared formatting helpers, reused when building the condensed (long-format)
 # tables: one row per condition/effect x parameter, with Greek symbols (μ, τ,
@@ -573,36 +581,6 @@ default_means_tbl <- default_means_tbl[order(default_means_tbl$Blur), ]
 rownames(default_means_tbl) <- NULL
 ```
 
-Although the resulting object is called `tau_estimates_default` for interpretive clarity, the parameter is named `beta` inside the default `brm` model. @tbl-default-means shows both the expected response and the exponential component together, by condition.
-
-```{r}
-#| label: build-tbl-default-means
-#| echo: false
-default_means_mu <- as.data.frame(overall_means)
-default_means_beta <- as.data.frame(tau_estimates_default)
-
-default_means_tbl <- rbind(
-  data.frame(
-    Blur = default_means_mu$Blur,
-    Parameter = "E(RT)",
-    Mean = fmt_num(default_means_mu$Mu),
-    `95% CrI` = fmt_ci(default_means_mu$CI_low, default_means_mu$CI_high),
-    pd = fmt_pd(default_means_mu$pd),
-    check.names = FALSE
-  ),
-  data.frame(
-    Blur = default_means_beta$Blur,
-    Parameter = "β",
-    Mean = fmt_num(default_means_beta$Beta),
-    `95% CrI` = fmt_ci(default_means_beta$CI_low, default_means_beta$CI_high),
-    pd = fmt_pd(default_means_beta$pd),
-    check.names = FALSE
-  )
-)
-default_means_tbl <- default_means_tbl[order(default_means_tbl$Blur), ]
-rownames(default_means_tbl) <- NULL
-```
-
 ```{r}
 #| label: tbl-default-means
 #| tbl-cap: "Estimated expected response, $E(RT)$, and exponential component (`beta`), by condition from the default brms model."
@@ -798,39 +776,6 @@ tau_estimates <- estimate_means(
   predict = "tau",
   centrality = "mean"
 )
-```
-
-@tbl-classical-means shows the Gaussian-location and exponential-component estimates together, by condition.
-
-```{r}
-#| label: build-tbl-classical-means
-#| echo: false
-classical_means_mu <- as.data.frame(mu_estimates)
-classical_means_tau <- as.data.frame(tau_estimates)
-
-classical_means_tbl <- rbind(
-  data.frame(
-    Blur = classical_means_mu$Blur,
-    Parameter = "μ",
-    Mean = fmt_num(classical_means_mu$Mu),
-    `95% CrI` = fmt_ci(classical_means_mu$CI_low, classical_means_mu$CI_high),
-    pd = fmt_pd(classical_means_mu$pd),
-    check.names = FALSE
-  ),
-  # estimate_means(predict = "tau") names the estimate column "Mean", not
-  # "Tau" (unlike "mu"/"beta", which do get their own name), with this
-  # model's default marginaleffects backend.
-  data.frame(
-    Blur = classical_means_tau$Blur,
-    Parameter = "τ",
-    Mean = fmt_num(classical_means_tau$Mean),
-    `95% CrI` = fmt_ci(classical_means_tau$CI_low, classical_means_tau$CI_high),
-    pd = fmt_pd(classical_means_tau$pd),
-    check.names = FALSE
-  )
-)
-classical_means_tbl <- classical_means_tbl[order(classical_means_tbl$Blur), ]
-rownames(classical_means_tbl) <- NULL
 ```
 
 @tbl-classical-means shows the Gaussian-location and exponential-component estimates together, by condition.
@@ -1087,13 +1032,15 @@ As in the Simulation Example, we use `{modelbased}`'s `estimate_means()` and `es
 #| message: false
 #| warning: false
 
-exp1_rds_path <- here::here(
-  "ms",
-  "Angele_et_al_2022",
-  "blmm_exp1_classical_rt.rds"
-)
+exp1_qs2_path <- if (file.exists("Angele_et_al_2022/blmm_exp1_classical_rt.qs2")) {
+  "Angele_et_al_2022/blmm_exp1_classical_rt.qs2"
+} else if (file.exists("../Angele_et_al_2022/blmm_exp1_classical_rt.qs2")) {
+  "../Angele_et_al_2022/blmm_exp1_classical_rt.qs2"
+} else {
+  here::here("Angele_et_al_2022", "blmm_exp1_classical_rt.qs2")
+}
 
-fit_exp1_classical <- readRDS(exp1_rds_path)
+fit_exp1_classical <- qs_read(exp1_qs2_path)
 
 # Harmonizes contrast direction to "Unrelated - Identical" / "50 ms - 33 ms",
 # matching the sign of the raw population-level regression coefficients.
