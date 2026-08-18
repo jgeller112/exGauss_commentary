@@ -1221,7 +1221,7 @@ blmm_exp1_classical_rt <- brm(
     link_sigma = "log"
   ), # {cogmod} family with identity/log links
   stanvars = rt_exgaussian_stanvars(), # Stan code injected into the model
-  inits = init_classical,
+  inits = 0,
   cores = 4,
   backend = "cmdstanr",
   threads = threading(2)
