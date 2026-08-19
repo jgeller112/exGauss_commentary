@@ -135,7 +135,7 @@ library(patchwork)
 library(cogmod)
 ```
 
-Over the past two decades, psychology has seen a substantial rise in the application of Bayesian data analysis methods as a supplement to widely used frequentist methods [@pfadt2025methodological]. This shift has been driven by the increasing availability of computational tools that have made fitting Bayesian models both practical and efficient. Programming languages like R [@R], Python [@python], and Julia [@julia] provide libraries and packages that allow researchers to fit Bayesian models with little technical overhead. In addition, growing dissatisfaction with the null ritual and its associated pitfalls (e.g., p-value misinterpretation and dichotomous thinking) [@gigerenzer2018statistical], together with growing distrust of published findings [@vazire2018], has pushed many researchers toward statistical alternatives.
+Over the past two decades, psychology has seen a substantial rise in the application of Bayesian data analysis methods as a supplement to widely used frequentist methods [@pfadt2025methodological]. This shift has been driven by the increasing availability of computational tools that have made fitting Bayesian models both practical and efficient. Programming languages like R [@R], Python [@python], and Julia [@julia] provide libraries and packages that allow researchers to fit Bayesian models with little technical overhead. In addition, growing dissatisfaction with the null ritual and its associated pitfalls (e.g., p-value misinterpretation and dichotomous thinking) [@gigerenzer2018statistical], together with growing distrust of published findings, has pushed many researchers toward statistical alternatives [@vazire2018]. 
 
 One domain that has seen increased adoption of Bayesian methods is experimental psychology, where one of the most common dependent variables is response times (RT), which is a measure of how long it takes a person to initiate a response (e.g., motor, written, or spoken) to a stimulus. RT data offers a window into cognitive processes underlying behavior [@baayen2010analyzing]. Traditionally, RT data have been analyzed using summary statistics such as the mean or median. However, RT distributions are typically positively skewed, bounded at zero, and characterized by substantial variability both within and between individuals [@wilcox; @whelan2008]. Moreover, experimental manipulations may affect not only the central tendency of the distribution but also its variability or upper tail. Consequently, analyses based solely on the mean or median can obscure theoretically meaningful distributional effects, motivating calls to move beyond mean-based analyses of RT data [@balota2011].
 
@@ -1221,7 +1221,7 @@ blmm_exp1_classical_rt <- brm(
     link_sigma = "log"
   ), # {cogmod} family with identity/log links
   stanvars = rt_exgaussian_stanvars(), # Stan code injected into the model
-  inits = 0,
+  init = 0,
   cores = 4,
   backend = "cmdstanr",
   threads = threading(2)
