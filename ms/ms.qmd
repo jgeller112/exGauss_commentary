@@ -847,7 +847,6 @@ classical_means_tbl <- rbind(
       classical_means_mu$CI_low,
       classical_means_mu$CI_high
     ),
-    pd = fmt_pd(classical_means_mu$pd),
     check.names = FALSE
   ),
   # estimate_means(predict = "tau") names the estimate column "Mean", not
@@ -860,9 +859,7 @@ classical_means_tbl <- rbind(
       classical_means_tau$Mean,
       classical_means_tau$CI_low,
       classical_means_tau$CI_high
-    ),
-    pd = fmt_pd(classical_means_tau$pd),
-    check.names = FALSE
+    ),    check.names = FALSE
   )
 )
 classical_means_tbl <- classical_means_tbl[order(classical_means_tbl$Blur), ]
