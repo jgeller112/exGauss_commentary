@@ -108,6 +108,7 @@ format:
     toc-depth: 2
     toc-title: Manuscript Outline
     toc-location: right
+    suppress-title-introduction: true
     echo: true
     code-tools: true
     code-fold: true
