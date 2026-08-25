@@ -215,6 +215,7 @@ fmt_est <- function(x, low, high, digits = 1) {
 #| eval: false
 
 # install from Github
+# note need to update code becasue new version changed argument names
 #remotes::install_github("DominiqueMakowski/cogmod")
 
 library(cogmod)
@@ -508,7 +509,7 @@ fit_brms <- brm(
   prior = priors_default, # priors from above
   family = exgaussian(), # brms' built-in ex-Gaussian family
   chains = 2,
-  iter = 2000, 
+  iter = 2000,
   warmup = 500,
   backend = "cmdstanr",
   cores = 4,
@@ -860,7 +861,8 @@ classical_means_tbl <- rbind(
       classical_means_tau$Mean,
       classical_means_tau$CI_low,
       classical_means_tau$CI_high
-    ),    check.names = FALSE
+    ),
+    check.names = FALSE
   )
 )
 classical_means_tbl <- classical_means_tbl[order(classical_means_tbl$Blur), ]
@@ -1185,7 +1187,6 @@ tt(priors_table_real)
 # Subset data to determine random effect dimensions
 data_fit <- exp1_data_to_include |> # find data here https://github.com/jgeller112/exGauss_commentary/blob/main/Angele_et_al_2022
   filter(corr == 1 & StimulusType == "Word" & rt > 250 & rt < 1800)
-
 ```
 
 The classical ex-Gaussian model for Experiment 1 is specified and fit as follows (@lst-fit-real-exp1):
