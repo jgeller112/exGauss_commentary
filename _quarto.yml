@@ -10,7 +10,7 @@ format:
     csl: apa.csl
   apaquarto-html:
     toc: true
-    toc-depth: 2
+    toc-depth: 5
     toc-title: Manuscript Outline
     toc-location: right
     echo: true
