@@ -1,7 +1,7 @@
 project:
   title: "This Is Not the ex-Gaussian Model You Are Looking For"
   render:
-    - /ms/ms.qmd
+    - /manuscript/ms.qmd
 
 format:
   apaquarto-docx: default

@@ -57,7 +57,7 @@ jobs:
           key: cmdstan-2.37.0-${{ runner.os }}
 
       # Renders every format declared in _quarto.yml (apaquarto-docx,
-      # apaquarto-typst, apaquarto-html) for ms/ms.qmd.
+      # apaquarto-typst, apaquarto-html) for manuscript/ms.qmd.
       - name: Render manuscript
         run: nix-shell default.nix --run "quarto render"
 
@@ -67,11 +67,11 @@ jobs:
       - name: Stage site
         run: |
           mkdir -p _site
-          cp ms/ms.html _site/index.html
-          cp ms/ms.docx _site/ms.docx
-          cp ms/ms.pdf _site/ms.pdf
-          cp -r ms/ms_files _site/ms_files
-          cp -r ms/_extensions _site/_extensions
+          cp manuscript/ms.html _site/index.html
+          cp manuscript/ms.docx _site/ms.docx
+          cp manuscript/ms.pdf _site/ms.pdf
+          cp -r manuscript/ms_files _site/ms_files
+          cp -r manuscript/_extensions _site/_extensions
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
