@@ -12,9 +12,9 @@ AGENTS.md
 *.qs2
 
 # Cached brms fits for the simulated-data models (regenerated on first render)
-ms/fits/
+manuscript/fits/
 
-ms/ms_files/
-ms/ms_cache/
+manuscript/ms_files/
+manuscript/ms_cache/
 /.quarto/
 **/*.quarto_ipynb
