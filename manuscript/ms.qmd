@@ -108,6 +108,7 @@ format:
     toc-depth: 2
     toc-title: Manuscript Outline
     toc-location: right
+    suppress-title-introduction: true
     echo: true
     code-tools: true
     code-fold: true
@@ -148,9 +149,9 @@ The central problem is that the parameter labeled $\mu$ in the default {brms} ex
 
 In this paper, we demonstrate what the default parameterization of the ex-Gaussian model in {brms} actually represents, and then show how to reparameterize the model so that $\mu$ corresponds to the location of the Gaussian component — the conventional ex-Gaussian parameter used in RT research — rather than the mean of the full distribution. We illustrate this first with a simulated dataset and then through reanalysis of a published finding. Our goal is to improve the accuracy and interpretability of inferences drawn from these models. This issue is particularly important because the ex-Gaussian distribution is widely used to distinguish changes in the central portion of the RT distribution from changes in its positively skewed tail.
 
-## Simulation Example
+# Simulation Example
 
-### Data Generation
+## Data Generation
 
 To demonstrate the issue with fitting the default ex-Gaussian model in {brms}, we simulate data using a comparison adapted from one of our own studies [@geller2025] in R [version 4.6.1, @R][^1]. In @geller2025, we examined how perceptual disfluency—manipulated by varying the level of blur applied to letter strings influenced reaction times in a lexical decision task (LDT; i.e., is this letter string a word?), and whether these effects were related to how well someone remembers the words in a recognition memory task. In that study, low blur words affected early stages of encoding, reflected in the Gaussian location parameter $\mu$, but not the later, tail component captured by $\tau$. For the present illustration, however, we construct a sharper scenario in which $\mu$ and $\tau$ differ in opposite directions so that the two conditions share the same expected reaction time. Using the classical ex-Gaussian parameterization implemented in the {cogmod} package [@makowski2026cogmod], we simulate ex-Gaussian data for clearly presented and low-blur words in which $\mu$ is set to 500 ms and 550 ms, $\tau$ to 100 ms and 50 ms, and $\sigma$ to 60 ms in both conditions (see @tbl-exgauss).
 
@@ -173,17 +174,17 @@ split_qs2_script <- if (file.exists("split_qs2.R")) {
 if (!is.null(split_qs2_script)) {
   source(split_qs2_script)
   # _quarto.yml only exists at the project root, so this is unambiguous
-  # (unlike checking for Angele_et_al_2022/, which can also exist under ms/
-  # locally e.g. from old interactive-session artifacts).
+  # (unlike checking for Angele_et_al_2022/, which can also exist under
+  # manuscript/ locally e.g. from old interactive-session artifacts).
   root_dir <- if (file.exists("_quarto.yml")) "." else ".."
   check_and_combine_qs2(root_dir)
 }
 
 # Where brm(..., file = ...) below caches fitted models across renders.
 # root_dir already points from the current working directory (either the
-# project root or ms/, depending on execute-dir) back to the project root,
-# so appending "ms/fits" resolves correctly either way.
-fits_dir <- file.path(root_dir, "ms", "fits")
+# project root or manuscript/, depending on execute-dir) back to the project
+# root, so appending "manuscript/fits" resolves correctly either way.
+fits_dir <- file.path(root_dir, "manuscript", "fits")
 if (!dir.exists(fits_dir)) {
   dir.create(fits_dir, recursive = TRUE)
 }
@@ -394,7 +395,7 @@ ggplot(d, aes(x = rt)) +
   )
 ```
 
-### Default {brms} Parameterization
+## Default {brms} Parameterization
 
 Using this data we fit the default `brms` ex-Gaussian model. In this parameterization, the parameter labeled `mu` represents the expected value of the full ex-Gaussian distribution rather than the location of its Gaussian component.
 
@@ -410,7 +411,7 @@ In other words, the default {brms} parameterization uses `mu` for the expected v
 
 Both the expected response and the exponential component are allowed to vary across conditions.
 
-#### Prior Specification
+### Prior Specification
 
 The priors were selected to reflect the known scale of the simulated data while remaining sufficiently broad to allow the model to recover deviations from the generating values. @tbl-priors shows these priors alongside those used for the classical parameterization introduced later, so the two specifications can be compared directly.
 
@@ -517,7 +518,7 @@ fit_brms <- brm(
 )
 ```
 
-#### Estimating Ex-Gaussian Parameters
+### Estimating Ex-Gaussian Parameters
 
 The `{modelbased}` package [@makowski2025modelbased], which is part of the `{easystats}` ecosystem [@ludecke2019insight], can easily be used to obtain condition-specific posterior estimates from a fitted model. The `estimate_means()` function returns estimated parameters for each condition, back-transformed, so estimates are presented on the scale of interest (here milliseconds), whereas `estimate_contrasts()` computes differences between conditions. To conserve space this code is not shown here, but interested readers can go to the GitHub repo and view the code.
 
@@ -531,7 +532,7 @@ $$E(RT) = \mu + \tau.$$
 
 Thus, the 50-ms increase in $\mu$ for the Low-Blur condition is offset by a 50-ms decrease in $\tau$. The expected RT is therefore 600 ms in both conditions.
 
-#### Estimating the Expected Response ($\mu$)
+### Estimating the Expected Response ($\mu$)
 
 Condition-specific estimates of the expected response can be obtained with `estimate_means()` and setting `predict` argument to "mu".
 
@@ -566,7 +567,7 @@ The posterior estimate of this contrast should be close to zero because the two 
 
 $$(550 + 50) - (500 + 100) = 600 - 600 = 0.$$
 
-#### Estimating the Exponential Component
+### Estimating the Exponential Component
 
 In the default {`brms}` parameterization, `beta` represents the mean of the exponential component. It therefore corresponds directly to $\tau$ in the classical parameterization:
 
@@ -696,7 +697,7 @@ tt(default_contrast_tbl)
 
 As shown in @tbl-default-contrast, the default model correctly recovers a near-zero contrast in $E(RT)$, since the two conditions were generated with the same expected RT. However, its primary `mu` coefficient does not directly reveal the 50-ms difference in the Gaussian-location parameter — that difference only shows up in the `beta` contrast, which is approximately 50 ms.
 
-### Classical Ex-Gaussian Parameterization
+## Classical Ex-Gaussian Parameterization
 
 As we have shown above, the default parameterization yields the expected RT of the entire distribution. We can instead fit the model using the `rt_exgaussian()` family from the {cogmod} package, which implements the classical ex-Gaussian parameterization. In this model, $\mu$ represents the location of the Gaussian component and $\tau$ represents the mean of the exponential component.
 
@@ -708,7 +709,7 @@ At the sampling level, the log-likelihood is written in Stan and calls the built
 
 [^2]: <https://github.com/DominiqueMakowski/cogmod/blob/4b10ea5e00e02984d39c0749adf8dc0b9c4ab15b/R/rt_exgaussian_brms.R#L30-L37>
 
-#### Prior Specification
+### Prior Specification
 
 The priors for the classical model follow the same reasoning as those for the default model, shown together in @tbl-priors:
 
@@ -780,7 +781,7 @@ fit_brms_new <- brm(
 )
 ```
 
-#### Estimating the Gaussian-Location Parameter
+### Estimating the Gaussian-Location Parameter
 
 For the classical model, estimates from the primary regression formula correspond to the Gaussian-location parameter $\mu$.
 
@@ -814,7 +815,7 @@ mu_difference <- estimate_contrasts(
 
 The posterior mean will not necessarily equal exactly 50 ms because of sampling variability. However, the 95% credible interval should contain the population value of 50 ms when the model successfully recovers the simulated effect.
 
-#### Estimating the Exponential Component
+### Estimating the Exponential Component
 
 Condition-specific estimates of $\tau$ can be obtained by requesting predictions for the `tau` distributional parameter.
 
@@ -1116,7 +1117,7 @@ p_dist /
   patchwork::plot_layout(heights = c(2.2, 0.8, 0.5))
 ```
 
-## From Simulation to Application: Reanalysis of @angele2023
+# From Simulation to Application: Reanalysis of @angele2023
 
 In order to demonstrate how the difference between parameterizations can affect the interpretation of real data, we re-analyze Experiment 1 from @angele2023. The main focus of @angele2023's study was to test whether the masked priming paradigm can be successfully implemented in a JavaScript-based online experiment built in PsychoPy [@peirce2019] and hosted on Pavlovia. In a prototypical masked priming task [@forster1984], a stimulus (called the prime) is presented for a very short duration and immediately replaced by a target stimulus in the same location in upper case, on which participants must judge lexicality. @angele2023 used masked identity priming, in which the prime is either identical to the target (e.g., *region*–REGION) or unrelated (e.g., *launch*–REGION). While testing whether masked priming could be obtained in an online setting was one goal, @angele2023 also attempted to make a theoretical contribution by using the ex-Gaussian model to evaluate @forster1998pros's savings hypothesis. @forster1998pros argued that if the prime is identical to the target, having pre-processed the prime will allow participants to respond faster. In this case, the whole distribution of reaction times should be shifted to the left for the identical condition compared to the unrelated condition — that is, there should be an effect on $\mu$ rather than on the slower responses (i.e., $\tau$). The experiment had a 2 × 2 design, crossing prime exposure duration (33.3 ms vs. 50 ms) with priming condition (Identical vs. Unrelated). Consistent with the savings hypothesis, they found a robust effect of relatedness on $\mu$, with responses to the unrelated condition being slower on average than to the identical condition, and this priming effect was larger at the 50-ms exposure duration than at 33.3 ms (see @tbl-real-contrasts for estimates from this experiment). Critically, relatedness had no credible effect on $\tau$, indicating that the priming manipulation shifted the RT distribution rather than changing its shape.
 
@@ -1227,7 +1228,7 @@ blmm_exp1_classical_rt <- brm(
 
 Depending on the hardware used, this model may take more than 30 minutes to fit. Because of this, it is recommended to fit it once and then save the fitted model object to a file for later use.
 
-### Estimating Ex-Gaussian Parameters with `{easystats}`
+## Estimating Ex-Gaussian Parameters with `{easystats}`
 
 As in the Simulation Example, we use `{modelbased}`'s `estimate_means()` and `estimate_contrasts()` to obtain condition-specific posterior estimates and contrasts, rather than computing them by hand from the raw posterior draws. Because this model has thousands of posterior draws and a large number of by-participant and by-item random effects, we set `backend = "emmeans"` (instead of the default `marginaleffects` backend) to keep the marginal computations memory-efficient.
 
@@ -1567,7 +1568,7 @@ As shown in @tbl-real-contrasts, under the classical parameterization, the true 
 
 For the exponential component $\tau$, the main effect of relatedness is small and non-credible (`r get_val("Main Effect of Relatedness", "Tau")` ms, 95% CrI `r get_val("Main Effect of Relatedness", "Tau 95% CrI")`, pd = `r get_val("Main Effect of Relatedness", "Tau pd")`), as is the interaction term (`r get_val("Relatedness x Prime Duration Interaction", "Tau")` ms, 95% CrI `r get_val("Relatedness x Prime Duration Interaction", "Tau 95% CrI")`, pd = `r get_val("Relatedness x Prime Duration Interaction", "Tau pd")`). Consequently, the priming effect (i.e., the difference between related and unrelated prime conditions) on $\tau$ is non-credible at 33 ms (`r get_val("Priming Effect at 33 ms", "Tau")` ms, 95% CrI `r get_val("Priming Effect at 33 ms", "Tau 95% CrI")`, pd = `r get_val("Priming Effect at 33 ms", "Tau pd")`) and 50 ms (`r get_val("Priming Effect at 50 ms", "Tau")` ms, 95% CrI `r get_val("Priming Effect at 50 ms", "Tau 95% CrI")`, pd = `r get_val("Priming Effect at 50 ms", "Tau pd")`), consistent with Forster's [-@forster1998pros] savings hypothesis that would expect such an effect to show in $\mu$ rather than in $\tau$. However, the model reveals a credible main effect of prime duration on $\tau$ (`r get_val("Main Effect of Prime Duration", "Tau")` ms, 95% CrI `r get_val("Main Effect of Prime Duration", "Tau 95% CrI")`, pd = `r get_val("Main Effect of Prime Duration", "Tau pd")`), showing that increasing prime duration from 33 ms to 50 ms moderately shortened the right tail.
 
-### Comparison with Angele et al. (2023)
+## Comparison with Angele et al. (2023)
 
 Comparing these classical ex-Gaussian estimates with those originally reported by @angele2023 (the "Default brms E(RT)" column of @tbl-real-contrasts) highlights the practical consequences of model parameterization for theoretical inferences.
 
@@ -1579,7 +1580,7 @@ Comparing these classical ex-Gaussian estimates with those originally reported b
 
 4.  **Summary**: This empirical comparison demonstrates that misinterpreting default {brms} parameters can lead to subtle misattributions regarding *which* distributional component is altered by an experimental manipulation. In @angele2023, a tail-shortening effect of prime duration ($\Delta \tau =$ `r get_val("Main Effect of Prime Duration", "Tau")` ms) was attributed to the Gaussian location parameter (`mu`). Adopting the classical parameterization showcases some uncertainty regarding the existence of an effect of prime duration on $\mu$ (pd = `r get_val("Main Effect of Prime Duration", "Mu pd")`), underscoring that parameterization affects not only which component an effect is attributed to, but the confidence with which its existence can be claimed at all.
 
-## Conclusion
+# Conclusion
 
 With this discussion, we hope to encourage researchers to use the appropriate ex-Gaussian parameterization when modeling reaction-time data with the {brms} package. The ex-Gaussian distribution provides a powerful framework for moving beyond analyses of the mean by separating differences in the central portion of the reaction-time distribution from differences in its right tail.
 
