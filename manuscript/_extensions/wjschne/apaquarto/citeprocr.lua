@@ -6,7 +6,7 @@
 -- Counter for citation
 local n_citations = 0
 local referenceword = "References"
-local maskedauthor = "Masked Citation"
+local maskedauthor = "Masked Author"
 local maskedtitle = "Masked Title"
 local maskeddate = "n.d."
 local metaanalysis = true
@@ -186,6 +186,12 @@ return {
       local d = pandoc.utils.citeproc(doc)
       if FORMAT == "typst" then
         d.meta.citeproc = true
+        -- citeproc has already formatted the references above, so the bibliography
+        -- style is no longer needed. Drop csl to suppress Quarto's redundant
+        -- `#set bibliography(style: "...")` line, whose extension-relative path is
+        -- written with an escaped underscore that Typst cannot find -- which
+        -- otherwise breaks every apaquarto-typst document that has citations.
+        d.meta.csl = nil
       end
       return d
     end
