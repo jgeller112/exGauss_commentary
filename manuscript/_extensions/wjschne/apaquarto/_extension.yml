@@ -1,6 +1,6 @@
 title: My Document in APA Style, Seventh Edition
 author: W. Joel Schneider
-version: 5.0.16
+version: 6.0.0
 quarto-required: ">=1.4.549"
 contributes:
   formats:
@@ -17,6 +17,7 @@ contributes:
       fig-width: 6.5
       fig-height: 6.5
       number-depth: 3
+      floatsintext: true
       crossref:
         subref-labels: alpha A
       suppress-title-page: false
@@ -38,10 +39,12 @@ contributes:
       suppress-corresponding-city: false
       suppress-corresponding-region: false
       suppress-corresponding-postal-code: false
+      suppress-corresponding-country: false
       suppress-corresponding-email: false
       suppress-abstract: false
       suppress-impact-statement: false
       suppress-keywords: false
+      suppress-supplemental-materials: false
       suppress-title-introduction: false
       no-ampersand-parenthetical: false
       language: 
@@ -55,12 +58,21 @@ contributes:
         title-block-correspondence-note: "Correspondence concerning this article should be addressed to"
         title-block-role-introduction: "Author roles were classified using the Contributor Role Taxonomy (CRediT; https://credit.niso.org/) as follows:"
         title-impact-statement: "Impact Statement"
+        title-supplemental-materials: "Supplemental materials"
         title-word-count: "Word Count"
         references-meta-analysis: "References marked with an asterisk indicate studies included in the meta-analysis."
       filters:
+        # Resolve documentmode aliases (journal, manuscript, document, student)
+        # before anything reads the field
+        - at: pre-ast
+          path: documentmode.lua
         # Sets language defaults other than English
         - at: pre-ast
           path: apalanguage.lua
+        # Recover the apa-note of a plain markdown table before quarto
+        # flattens it
+        - at: pre-ast
+          path: apatablenote.lua
         # Prepare plain markdown tables to be used by crossrefprefix.lua
         - at: pre-ast
           path: markdowntable.lua
@@ -70,10 +82,18 @@ contributes:
         # Move figures and tables to end of document
         - at: pre-ast
           path: apafloatstoend.lua
+        # Mark apa-twocolumn floats (and capture table notes) AFTER float
+        # placement but before Quarto realizes markdown tables, so the marker
+        # stays adjacent to a float that floatsintext: false has moved to the end.
+        - at: pre-ast
+          path: apatwocolumntypstcollect.lua
  
         # Set latex document mode
         - at: pre-ast
           path: journalmode.lua
+        # Put papersize in the form the latex document class wants
+        - at: pre-ast
+          path: apapapersize.lua
         # Set latex images to column width by default
         - at: pre-ast
           path: apafigurewidthlatex.lua     
@@ -113,6 +133,8 @@ contributes:
         # Inserts appendix prefixes to tables and figures
         - at: pre-quarto
           path: apafigtblappendix.lua
+        - at: post-quarto
+          path: floatwithsubfigure.lua
         # Process tables and figures in latex
         - at: post-quarto
           path: apafloatlatex.lua
@@ -134,6 +156,9 @@ contributes:
         # Puts proper spacing for paragraphs after figures and tables
         - at: post-render
           path: apaafternote.lua
+        # Span apa-twocolumn figures across both columns in typst journal mode
+        - at: post-render
+          path: apatwocolumntypst.lua
         # Process citations, adds asterisks for meta-analysis citations
         - at: post-render
           path: citeprocr.lua
@@ -143,13 +168,31 @@ contributes:
         # Process appendices in latex
         - at: post-render
           path: apaappendixlatex.lua
+        # Warn when a pdf standard cannot work with the document's tables
+        - at: post-render
+          path: apapdfstandard.lua
     native: default
     html:
+      filters:
+        # Place tinytable tables with tbl-align, left by default
+        - at: post-quarto
+          path: apatinytablehtml.lua
       toc: true
       toc-location: left
       anchor-sections: false
       fig-cap-location: top
       html-math-method: katex
+      # An {{< embed other.qmd#fig-x >}} makes quarto render the source
+      # document a second time, from a copy it writes to .quarto/embed, to
+      # build a standalone preview page for the "Source:" link. That render
+      # resolves the theme against .quarto/embed rather than the project, so
+      # it cannot find _extensions/apaquarto/apa.scss ("Theme file not found")
+      # and falls back to stock bootstrap -- a preview page with none of this
+      # format's styling. The embedded output itself is unaffected: it is
+      # inlined into the article, which has the theme. Turning the preview off
+      # drops the warning and the unstyled page; set notebook-view: true to
+      # get the "Source:" link back.
+      notebook-view: false
       mainfont: Times, Times New Roman, serif
       monofont: Consolas, Lucida Console, Courier New, monospace
       grid: 
@@ -164,7 +207,7 @@ contributes:
           dev: svglite
     pdf:
       documentclass: apa7
-      pdf-engine: xelatex
+      pdf-engine: lualatex
       suppress-bibliography: false
       hyperrefoptions: 
         - linktoc=none
@@ -174,7 +217,6 @@ contributes:
       template-partials:
         - doc-class.tex
         - title.tex
-        - before-body.tex
         - header.tex
       classoption: "colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue"
     docx: 
@@ -183,9 +225,13 @@ contributes:
         # Add custom styles to docx
         - at: post-quarto
           path: docxstyler.lua
-        # Add line numbers and format Latex symbol
+        # Format Latex symbol
         - at: post-render
-          path: docxlinenumber.lua
+          path: docxformatlatexsymbol.lua
+        # Set the docx fonts and page size from the mainfont, monofont
+        # and papersize options
+        - at: post-render
+          path: docxreferencedoc.lua
       knitr: 
         opts_chunk: 
           dev: ragg_png
