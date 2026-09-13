@@ -51,8 +51,24 @@
     spacing: 6pt,
     leading: 6pt
   )
-  
+
   show raw.where(block: true): set text(
+    size: 10pt
+  )
+
+  // Pandoc's typst writer renders fenced code blocks with line numbers via
+  // its own `Skylighting(...)` helper, which lays every line out as inline
+  // raw() fragments joined by literal newlines inside a plain block(fill:
+  // #f1f3f5) -- never as a single raw element with block: true. That means
+  // the rules above never match, and the code silently inherits the body's
+  // par leading. Target the highlighting block's fill color instead so
+  // numbered code listings actually get single-spaced.
+  show block.where(fill: rgb("#f1f3f5")): set par(
+    spacing: 6pt,
+    leading: 6pt
+  )
+
+  show block.where(fill: rgb("#f1f3f5")): set text(
     size: 10pt
   )
 
@@ -67,7 +83,7 @@
       align(right)[#context counter(page).display()]
     )
   )
-  
+
 
   
 
@@ -232,6 +248,22 @@
   )
 
   show raw.where(block: true): set text(
+    size: 9pt
+  )
+
+  // Pandoc's typst writer renders fenced code blocks with line numbers via
+  // its own `Skylighting(...)` helper, which lays every line out as inline
+  // raw() fragments joined by literal newlines inside a plain block(fill:
+  // #f1f3f5) -- never as a single raw element with block: true. That means
+  // the rules above never match, and the code silently inherits the body's
+  // par leading. Target the highlighting block's fill color instead so
+  // numbered code listings actually get single-spaced.
+  show block.where(fill: rgb("#f1f3f5")): set par(
+    spacing: 6pt,
+    leading: 6pt
+  )
+
+  show block.where(fill: rgb("#f1f3f5")): set text(
     size: 9pt
   )
 
