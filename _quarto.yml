@@ -2,8 +2,6 @@ project:
   title: "This Is Not the ex-Gaussian Model You Are Looking For"
   render:
     - /manuscript/ms.qmd
-  post-render:
-    - manuscript/fix-docx-alignment.R
 
 format:
   apaquarto-docx: default
