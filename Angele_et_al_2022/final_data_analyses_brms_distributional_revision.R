@@ -25,7 +25,7 @@ exp1$device <- ifelse(exp1$OS %in% c("Linux armv7l", "Linux armv8l"), "android",
 # also don't consider participants whose age is 99 (used for testing)
 # one participant is duplicate. Remove the first occurrence (likely incompatible device)
 
-exp1_actual_participants <- filter(exp1_all_participants, (PROLIFIC_PID %in% exp1$participant) & (nchar(PROLIFIC_PID) == 24) & !(PROLIFIC_PID %in% c("sub-097")) & (`What is your age?` != 99) & (`Response ID` != "R_sU4qJ6UCe9jRKs9"))
+exp1_actual_participants <- filter(exp1_all_participants, (PROLIFIC_PID %in% exp1$participant) & (grepl("^sub-[0-9]{3}$", PROLIFIC_PID)) & !(PROLIFIC_PID %in% c("sub-097")) & (`What is your age?` != 99) & (`Response ID` != "R_sU4qJ6UCe9jRKs9"))
 
 # get participants with more than 80% correct responses
 
@@ -57,7 +57,7 @@ exp2$device <- ifelse(exp2$OS %in% c("Linux armv7l", "Linux armv8l"), "android",
 # also don't consider participants whose age is 99 (used for testing)
 # one participant is duplicate. Remove the first occurrence (likely incompatible device)
 
-exp2_actual_participants <- filter(exp2_all_participants, (PROLIFIC_PID %in% exp2$participant) & (nchar(PROLIFIC_PID) == 24) & !(PROLIFIC_PID %in% c("sub-097")) & (`What is your age?` != 99) & !(`Response ID` %in% c("R_2c2dVRNmGvI6CH9", "R_3ELutaT6GNe5mmR", "R_XX7jgUk2NbIi41j", "R_125QKzJfHwoGHaT")))
+exp2_actual_participants <- filter(exp2_all_participants, (PROLIFIC_PID %in% exp2$participant) & (grepl("^sub-[0-9]{3}$", PROLIFIC_PID)) & !(PROLIFIC_PID %in% c("sub-097")) & (`What is your age?` != 99) & !(`Response ID` %in% c("R_2c2dVRNmGvI6CH9", "R_3ELutaT6GNe5mmR", "R_XX7jgUk2NbIi41j", "R_125QKzJfHwoGHaT")))
 
 # get participants with more than 80% correct responses
 

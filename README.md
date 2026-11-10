@@ -271,6 +271,10 @@ Everything else here is provenance/refit material, not required to render the pa
 - `participant_data_exp1.csv` (Qualtrics participant/survey data) and `data_exp1/`
   (raw per-participant PsychoJS trial data, `.csv` + `.log`) are the raw inputs to
   that refitting script.
+- These data are de-identified: Prolific participant IDs have been replaced with
+  pseudonyms (`sub-001` … `sub-097`) in filenames, file contents, `PROLIFIC_PID`,
+  and the fitted model object. The Prolific study ID column, IP addresses,
+  geolocation, and Prolific session IDs have been removed.
 
 
 ## Notes

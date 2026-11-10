@@ -40,7 +40,7 @@ exp1$device <- ifelse(exp1$OS %in% c("Linux armv7l", "Linux armv8l"), "android",
 exp1_actual_participants <- filter(
   exp1_all_participants, 
   (PROLIFIC_PID %in% exp1$participant) & 
-  (nchar(PROLIFIC_PID) == 24) & 
+  (grepl("^sub-[0-9]{3}$", PROLIFIC_PID)) & 
   !(PROLIFIC_PID %in% c("sub-097")) & 
   (`What is your age?` != 99) & 
   (`Response ID` != "R_sU4qJ6UCe9jRKs9")
